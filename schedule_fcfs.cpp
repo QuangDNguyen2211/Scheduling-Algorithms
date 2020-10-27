@@ -9,17 +9,22 @@ using std::ignore;
 void ScheduleFCFS::schedule(CPU *cpu) {
   Task *task;
   cout << "ScheduleFCFS::schedule()" << endl;
-  // Run tasks from the list as FCFS format
-  for (auto it = tasks[0]->begin(); it != tasks[0]->end(); it++) {
-    task = *it;
-    //task = pickNextTask();
+
+  int numberOfTasks = tasks[0]->size();
+  // Run and show tasks from the list
+  for (int i = 0; i < numberOfTasks; i++) {
+    task = pickNextTask();
     cpu->run(task, task->burst);
   }
 }
 
 Task *ScheduleFCFS::pickNextTask() {
-  Task *task = tasks[0]->back();
-  //tasks[0]->splice(tasks[0]->end(), *tasks[0], tasks[0]->begin());
+  // Get the first task of 'sortedPriorityTasks' and assign to 'task'
+  Task *task = tasks[0]->front();
+  // Remove that task
+  tasks[0]->pop_front();
+  // Put it into the back of the list
+  tasks[0]->push_back(task);
   return task;
 }
 
