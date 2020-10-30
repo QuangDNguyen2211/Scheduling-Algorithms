@@ -11,30 +11,31 @@ list<Task *> sortedPriorityTasks;
 void SchedulePriority::schedule(CPU *cpu) {
     cout << "SchedulePriority::schedule()" << endl;
 
-    // Sort the tasks based on their priority in the ascending order
-    // and store them into 'sortedPriorityTasks'
-    for (int i = 1; i <= 10; i++) {
-      for (auto it = tasks[0]->begin(); it != tasks[0]->end(); it++) {
-        if ((*it)->priority == i) {
-          sortedPriorityTasks.push_back(*it);
-        }
-      }
-    }
+    // Run and show tasks from the list
+    while(!tasks[0]->empty()) {
+      Task *taskToRun = pickNextTask();
+      cpu->run(taskToRun, taskToRun->burst);
 
-    int numberOfPriorities = sortedPriorityTasks.size();
-    // Run and show the tasks by using SJF Algorithm
-    for (auto i = 0; i < numberOfPriorities; i++) {
-      Task *task = pickNextTask();
-      cpu->run(task, task->burst);
+      for (list<Task *> *queue : tasks)
+          for (Task *task : *queue)
+            if(task == taskToRun)
+              delete task;
+      tasks[0]->remove(taskToRun);
     }
 }
 
 Task *SchedulePriority::pickNextTask() {
-  // Get the first task of 'sortedPriorityTasks' and assign to 'task'
-  Task* task = sortedPriorityTasks.front();
-  // Remove that task
-  sortedPriorityTasks.pop_front();
-  return task;
+  int highest_priority = tasks[0]->front()->priority;
+
+  for (list<Task *> *queue : tasks)
+      for (Task *task : *queue)
+        if(task->priority < highest_priority)
+          highest_priority = task->priority;
+
+  for (list<Task *> *queue : tasks)
+      for (Task *task : *queue)
+        if(task->priority == highest_priority)
+          return task;
 }
 
 Scheduler *create() {
