@@ -12,20 +12,24 @@ void SchedulePriorityRR::schedule(CPU *cpu)
     cout << "SchedulePriorityRR::schedule()" << endl;
     int lowest_priority = tasks[0]->front()->priority;
     int i = 1;
-
-    for (list<Task *> *queue : tasks)
-        for (Task *task : *queue)
-          if(task->priority > lowest_priority)
-            lowest_priority = task->priority;
+    bool dupPri = false;
 
     while(!tasks[0]->empty()) {
       Task *taskToRun = pickNextTask();
-      if(taskToRun->burst > cpu->QUANTUM)
-        cpu->run(taskToRun, cpu->QUANTUM);
-      else
-        cpu->run(taskToRun, taskToRun->burst);
 
-      taskToRun->burst -= cpu->QUANTUM;
+      for (list<Task *> *queue : tasks)
+          for (Task *task : *queue)
+            if(task->name != taskToRun->name && task->priority == taskToRun->priority)
+              dupPri = true;
+
+      if(taskToRun->burst > cpu->QUANTUM && dupPri == true) {
+        cpu->run(taskToRun, cpu->QUANTUM);
+        taskToRun->burst -= cpu->QUANTUM;
+      }
+      else{
+        cpu->run(taskToRun, taskToRun->burst);
+        taskToRun->burst -= taskToRun->burst;
+      }
 
       if(taskToRun->burst <= 0) {
         for (list<Task *> *queue : tasks)
@@ -34,12 +38,12 @@ void SchedulePriorityRR::schedule(CPU *cpu)
                 delete task;
               }
         tasks[0]->remove(taskToRun);
+        dupPri = false;
       }
       else{
-        if(taskToRun->priority == lowest_priority * i){
-          i++;
-        }
-        taskToRun->priority += lowest_priority * i;
+        Task *temp = taskToRun;
+        tasks[0]->remove(taskToRun);
+        tasks[0]->push_back(temp);
       }
     }
 }
